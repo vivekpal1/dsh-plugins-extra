@@ -889,6 +889,58 @@ window.__ModuleLoader__.load({
 				]
 			});
 		}
+		function installSettingsNavIcon(ctx, getLabel) {
+			const marker = "codex-subscription";
+			const originals = /* @__PURE__ */ new Map();
+			const render = () => {
+				for (const button of document.querySelectorAll("[role=\"dialog\"] nav button")) {
+					if ([...button.children].find((child) => child.tagName === "SPAN")?.textContent?.trim() !== getLabel().trim()) continue;
+					if (button.dataset.dshPluginIcon && button.dataset.dshPluginIcon !== marker) continue;
+					const current = button.querySelector("svg");
+					if (!current || current.dataset.dshPluginIcon === marker) continue;
+					if (!originals.has(button)) originals.set(button, current.cloneNode(true));
+					const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+					for (const attribute of [
+						"class",
+						"width",
+						"height",
+						"style"
+					]) {
+						const value = current.getAttribute(attribute);
+						if (value !== null) icon.setAttribute(attribute, value);
+					}
+					icon.setAttribute("viewBox", "0 0 24 24");
+					icon.setAttribute("fill", "none");
+					icon.setAttribute("stroke", "currentColor");
+					icon.setAttribute("stroke-width", "1.8");
+					icon.setAttribute("stroke-linecap", "round");
+					icon.setAttribute("stroke-linejoin", "round");
+					icon.setAttribute("aria-hidden", "true");
+					icon.setAttribute("focusable", "false");
+					icon.dataset.dshPluginIcon = marker;
+					icon.innerHTML = "<path d=\"M12 3.5c.5 3.2 2.3 5 5.5 5.5-3.2.5-5 2.3-5.5 5.5-.5-3.2-2.3-5-5.5-5.5 3.2-.5 5-2.3 5.5-5.5Z\"/><path d=\"M18.5 3v3M20 4.5h-3M5 16v4M7 18H3\"/>";
+					current.replaceWith(icon);
+					button.dataset.dshPluginIcon = marker;
+				}
+			};
+			const observer = new MutationObserver(render);
+			ctx.effect(() => {
+				render();
+				observer.observe(document.body, {
+					childList: true,
+					subtree: true,
+					characterData: true
+				});
+				return () => {
+					observer.disconnect();
+					for (const [button, original] of originals) {
+						if (button.dataset.dshPluginIcon !== marker) continue;
+						button.querySelector(`svg[data-dsh-plugin-icon="${marker}"]`)?.replaceWith(original);
+						delete button.dataset.dshPluginIcon;
+					}
+				};
+			}, "codex-subscription: settings icon");
+		}
 		function apply(ctx) {
 			ctx.effect(() => ctx.locale.register(NS, {
 				zh,
@@ -901,6 +953,7 @@ window.__ModuleLoader__.load({
 				document.head.append(tag);
 				return () => tag.remove();
 			}, "codex-subscription: style");
+			installSettingsNavIcon(ctx, () => ctx.locale.bind(NS)("nav"));
 			const connection = ctx.get("connection");
 			const preference = createPreferenceController(connection.rpc);
 			ctx.effect(() => {

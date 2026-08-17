@@ -10,6 +10,10 @@ Community extensions for [DeepSeek Harness](https://github.com/deepseek-ai/deeps
 | [`dsh-session-import`](packages/dsh-session-import) | Import visible Codex and Claude Code conversations into DSH | Maintained here |
 | [`dsh-themes`](dsh-themes) | Catppuccin, Gruvbox, Nord, Tokyo Night, and Dracula palettes | Maintained here |
 
+### Settings icons
+
+DSH rc.6 does not expose an icon property for third-party settings sections; its shell assigns a gear to every unknown section ID. These packages use a small client-side compatibility shim to replace only their own fallback SVGs with semantic icons while preserving DSH's classes, `currentColor`, keyboard behavior, and accessible text. The shim observes settings-dialog remounts, restores the original SVG when a plugin unloads, and does not modify the installed DSH package.
+
 ## Install
 
 Requirements: Node.js 24+, npm, and a working `dsh` command.
@@ -42,6 +46,6 @@ Node tests cover both locally maintained plugins. The Codex subscription package
 
 ## Provenance and licenses
 
-`dsh-codex-subscription` is copied from upstream tag `v0.3.1` at commit `34b0fdd0783d1150351385eb727e402bcbdaf847`. Its MIT license, author metadata, security policy, and third-party notices remain inside that package. Changes to the mirror should be synchronized from upstream and clearly documented rather than silently rewritten.
+`dsh-codex-subscription` is copied from upstream tag `v0.3.1` at commit `34b0fdd0783d1150351385eb727e402bcbdaf847`. Its MIT license, author metadata, security policy, and third-party notices remain inside that package. This workspace adds the settings-icon compatibility shim to the client bundle; functional provider changes should still be synchronized from upstream and clearly documented.
 
 The session importer, theme integration, repository tooling, and documentation are MIT licensed. Theme names and palettes belong to their respective open-source communities; this repository is not affiliated with those projects, DeepSeek, Anthropic, or OpenAI.

@@ -48,6 +48,51 @@ window.__ModuleLoader__.load({
             h("button", { type: "button", onClick: () => window.location.reload() }, "Refresh conversations")) : null));
     }
 
+    function installSettingsNavIcon(ctx) {
+      const marker = "session-import";
+      const originals = new Map();
+      const render = () => {
+        for (const button of document.querySelectorAll('[role="dialog"] nav button')) {
+          const label = [...button.children].find((child) => child.tagName === "SPAN");
+          if (label?.textContent?.trim() !== "Import") continue;
+          if (button.dataset.dshPluginIcon && button.dataset.dshPluginIcon !== marker) continue;
+          const current = button.querySelector("svg");
+          if (!current || current.dataset.dshPluginIcon === marker) continue;
+          if (!originals.has(button)) originals.set(button, current.cloneNode(true));
+          const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          for (const attribute of ["class", "width", "height", "style"]) {
+            const value = current.getAttribute(attribute);
+            if (value !== null) icon.setAttribute(attribute, value);
+          }
+          icon.setAttribute("viewBox", "0 0 24 24");
+          icon.setAttribute("fill", "none");
+          icon.setAttribute("stroke", "currentColor");
+          icon.setAttribute("stroke-width", "1.8");
+          icon.setAttribute("stroke-linecap", "round");
+          icon.setAttribute("stroke-linejoin", "round");
+          icon.setAttribute("aria-hidden", "true");
+          icon.setAttribute("focusable", "false");
+          icon.dataset.dshPluginIcon = marker;
+          icon.innerHTML = '<path d="M12 3v11M8 10l4 4 4-4"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/>';
+          current.replaceWith(icon);
+          button.dataset.dshPluginIcon = marker;
+        }
+      };
+      const observer = new MutationObserver(render);
+      ctx.effect(() => {
+        render();
+        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+        return () => {
+          observer.disconnect();
+          for (const [button, original] of originals) {
+            if (button.dataset.dshPluginIcon !== marker) continue;
+            button.querySelector(`svg[data-dsh-plugin-icon="${marker}"]`)?.replaceWith(original);
+            delete button.dataset.dshPluginIcon;
+          }
+        };
+      }, "session-import: settings icon");
+    }
+
     const inject = ["slots", "connection"];
     function apply(ctx) {
       const style = document.createElement("style");
@@ -55,6 +100,7 @@ window.__ModuleLoader__.load({
       style.textContent = ".sessionImportPage{max-width:720px}.sessionImportIntro{color:var(--muted-foreground);line-height:1.55}.sessionImportCard{display:grid;gap:16px;padding:20px;border:1px solid var(--border);border-radius:14px;background:var(--card)}.sessionImportCard label{display:grid;gap:7px;font-weight:600}.sessionImportCard select{height:40px;border:1px solid var(--border);border-radius:8px;padding:0 10px;background:var(--background);color:inherit}.sessionImportError{color:#dc2626}.sessionImportSuccess{display:grid;gap:6px;padding:13px;border-radius:10px;background:color-mix(in srgb,#16a34a 12%,transparent)}.sessionImportSuccess code{font-size:12px}.sessionImportSuccess button{width:max-content;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;padding:0}";
       document.head.append(style);
       ctx.effect(() => () => style.remove(), "session-import: style");
+      installSettingsNavIcon(ctx);
       const connection = ctx.get("connection");
       ctx.slots.inject("settings.section", () => ctx.slots.register({
         name: "settings.section",

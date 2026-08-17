@@ -86,6 +86,51 @@ window.__ModuleLoader__.load({
         error ? h("p", { className: "communityThemeError", role: "alert" }, error) : null);
     }
 
+    function installSettingsNavIcon(ctx) {
+      const marker = "community-themes";
+      const originals = new Map();
+      const render = () => {
+        for (const button of document.querySelectorAll('[role="dialog"] nav button')) {
+          const label = [...button.children].find((child) => child.tagName === "SPAN");
+          if (label?.textContent?.trim() !== "Themes") continue;
+          if (button.dataset.dshPluginIcon && button.dataset.dshPluginIcon !== marker) continue;
+          const current = button.querySelector("svg");
+          if (!current || current.dataset.dshPluginIcon === marker) continue;
+          if (!originals.has(button)) originals.set(button, current.cloneNode(true));
+          const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          for (const attribute of ["class", "width", "height", "style"]) {
+            const value = current.getAttribute(attribute);
+            if (value !== null) icon.setAttribute(attribute, value);
+          }
+          icon.setAttribute("viewBox", "0 0 24 24");
+          icon.setAttribute("fill", "none");
+          icon.setAttribute("stroke", "currentColor");
+          icon.setAttribute("stroke-width", "1.8");
+          icon.setAttribute("stroke-linecap", "round");
+          icon.setAttribute("stroke-linejoin", "round");
+          icon.setAttribute("aria-hidden", "true");
+          icon.setAttribute("focusable", "false");
+          icon.dataset.dshPluginIcon = marker;
+          icon.innerHTML = '<path d="M12 3a9 9 0 1 0 0 18h1.2a1.8 1.8 0 0 0 0-3.6h-.7a1.7 1.7 0 0 1 0-3.4H15a6 6 0 0 0 0-12h-3Z"/><circle cx="7.5" cy="10" r=".8" fill="currentColor" stroke="none"/><circle cx="9" cy="6.7" r=".8" fill="currentColor" stroke="none"/><circle cx="13" cy="6" r=".8" fill="currentColor" stroke="none"/>';
+          current.replaceWith(icon);
+          button.dataset.dshPluginIcon = marker;
+        }
+      };
+      const observer = new MutationObserver(render);
+      ctx.effect(() => {
+        render();
+        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+        return () => {
+          observer.disconnect();
+          for (const [button, original] of originals) {
+            if (button.dataset.dshPluginIcon !== marker) continue;
+            button.querySelector(`svg[data-dsh-plugin-icon="${marker}"]`)?.replaceWith(original);
+            delete button.dataset.dshPluginIcon;
+          }
+        };
+      }, "community-themes: settings icon");
+    }
+
     const inject = ["slots", "connection", "theme"];
     function apply(ctx) {
       const theme = ctx.get("theme");
@@ -103,6 +148,7 @@ window.__ModuleLoader__.load({
       style.textContent = ".communityThemesPage{max-width:760px}.communityThemesPage>p{color:var(--dsw-alias-label-secondary);line-height:1.55}.communityThemeGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:18px 0}.communityThemeOption{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;padding:13px;border:1px solid var(--dsw-alias-border-l2);border-radius:12px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);cursor:pointer;text-align:left}.communityThemeOption:hover,.communityThemeOption[data-selected=true]{border-color:var(--dsw-alias-brand-primary);background:var(--dsw-alias-interactive-bg-hover)}.communityThemeOption strong{font-size:11px;color:var(--dsw-alias-brand-text)}.communityThemeSwatches{display:flex;overflow:hidden;border-radius:999px;border:1px solid var(--dsw-alias-border-l2)}.communityThemeSwatches i{display:block;width:12px;height:24px}.communityThemeError{color:var(--dsw-alias-label-error)}";
       document.head.append(style);
       ctx.effect(() => () => style.remove(), "community-themes: styles");
+      installSettingsNavIcon(ctx);
       ctx.slots.inject("settings.section", () => ctx.slots.register({
         name: "settings.section",
         id: "community-themes",
