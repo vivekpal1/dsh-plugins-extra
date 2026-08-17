@@ -11,6 +11,8 @@ test("Codex import keeps visible messages and drops injected context", async () 
   const rows = [
     { type: "session_meta", payload: { cwd: "/project", timestamp: "2026-01-01T00:00:00Z" } },
     { type: "response_item", payload: { type: "message", role: "user", content: [{ type: "input_text", text: "<environment_context>hidden</environment_context>" }] } },
+    { type: "response_item", payload: { type: "reasoning", summary: [] } },
+    { type: "response_item", payload: { type: "function_call", name: "read_file" } },
     { type: "response_item", payload: { type: "message", role: "user", content: [{ type: "input_text", text: "Build it" }] } },
     { type: "response_item", payload: { type: "message", role: "assistant", content: [{ type: "output_text", text: "Done" }] } },
   ];
@@ -18,6 +20,13 @@ test("Codex import keeps visible messages and drops injected context", async () 
   const parsed = await parseCodexSession(path);
   assert.deepEqual(parsed.messages, [{ role: "user", text: "Build it" }, { role: "assistant", text: "Done" }]);
   assert.equal(parsed.cwd, "/project");
+  assert.deepEqual(parsed.omissions, {
+    injectedContext: 1,
+    reasoning: 1,
+    toolActivity: 1,
+    metaOrSidechain: 0,
+    unsupportedContent: 0,
+  });
 });
 
 test("Claude import ignores tool-only rows", async () => {
@@ -27,9 +36,17 @@ test("Claude import ignores tool-only rows", async () => {
     { type: "user", message: { role: "user", content: "Hello" }, isSidechain: false },
     { type: "assistant", message: { role: "assistant", content: [{ type: "tool_use", name: "Read" }] }, isSidechain: false },
     { type: "user", message: { role: "user", content: [{ type: "tool_result", content: "secret" }] }, isSidechain: false },
+    { type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "side work" }] }, isSidechain: true },
     { type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "Hi" }] }, isSidechain: false },
   ];
   await writeFile(path, rows.map(JSON.stringify).join("\n"));
   const parsed = await parseClaudeSession(path);
   assert.deepEqual(parsed.messages, [{ role: "user", text: "Hello" }, { role: "assistant", text: "Hi" }]);
+  assert.deepEqual(parsed.omissions, {
+    injectedContext: 0,
+    reasoning: 0,
+    toolActivity: 2,
+    metaOrSidechain: 1,
+    unsupportedContent: 0,
+  });
 });

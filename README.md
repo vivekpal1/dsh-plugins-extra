@@ -1,15 +1,17 @@
 # DSH Plugins Extra
 
-Community extensions for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), organized as an npm workspace and installable into a local DSH web profile.
+`dsh-plugins-extra` is a small npm CLI and curated extension collection for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It installs each extension independently, verifies the resulting DSH profile, and keeps the security boundary of every adoption decision visible.
 
 ## Packages
 
-| Package | Purpose | Status |
-| --- | --- | --- |
-| [`dsh-codex-subscription`](packages/dsh-codex-subscription) | ChatGPT/Codex subscription authentication and provider integration | Upstream mirror of `WSL043/dsh-codex-subscription` v0.3.1 |
-| [`dsh-session-import`](packages/dsh-session-import) | Import visible Codex and Claude Code conversations into DSH | Maintained here |
-| [`dsh-solana-wallet`](packages/dsh-solana-wallet) | Encrypted self-custodial Solana wallet and approved session tools | Experimental, unaudited |
-| [`dsh-themes`](dsh-themes) | Catppuccin, Gruvbox, Nord, Tokyo Night, and Dracula palettes | Maintained here |
+| Install name | Adoption decision | Purpose | Status |
+| --- | --- | --- | --- |
+| `codex` | Credentials and model provider | ChatGPT/Codex subscription authentication and provider integration | Upstream mirror of `WSL043/dsh-codex-subscription` v0.3.1 |
+| `import` | Context provenance | Import visible Codex and Claude Code conversations into DSH | Maintained here |
+| `wallet` | Self-custody and transactions | Encrypted self-custodial Solana wallet and approved session tools | Experimental, unaudited |
+| `themes` | Reversible interface | Catppuccin, Gruvbox, Nord, Tokyo Night, and Dracula palettes | Maintained here |
+
+These packages are deliberately not presented as one trust decision. The CLI prints the relevant disclosure before installing each package, and users can list, verify, install, or remove any combination.
 
 ### Settings icons
 
@@ -20,12 +22,29 @@ DSH rc.6 does not expose an icon property for third-party settings sections; its
 Requirements: Node.js 24+, npm, and a working `dsh` command.
 
 ```sh
-git clone https://github.com/vivekpal1/dsh-plugins-extra.git
-cd dsh-plugins-extra
-./scripts/install.sh all
+npm install --global dsh-plugins-extra
+dsh-plugins-extra list
+dsh-plugins-extra install import themes
 ```
 
-Install one package with `codex`, `import`, `wallet`, or `themes` instead of `all`. The installer keeps immutable tarballs under `$DSH_HOME/packages` before adding them to the selected DSH profile, avoiding fragile workspace links and temporary-file dependencies. It defaults to the `web` profile; override it with `DSH_PROFILE=name`.
+Multiple package names can follow one install command, and `all` installs the complete collection:
+
+```sh
+dsh-plugins-extra install codex wallet themes
+dsh-plugins-extra install all --profile web
+dsh-plugins-extra update import themes
+dsh-plugins-extra verify
+dsh-plugins-extra doctor
+dsh-plugins-extra uninstall wallet
+```
+
+One-off use through npm works as well:
+
+```sh
+npx dsh-plugins-extra@latest install import themes
+```
+
+The npm package contains the exact reviewed plugin builds from this repository. The CLI packs those builds locally into `$DSH_HOME/packages`, passes argument arrays directly to DSH without shell interpolation, and verifies that each plugin appears exactly once. It never substitutes similarly named third-party npm packages. The default profile is `web`; use `--profile name` or `DSH_PROFILE=name` for another profile.
 
 Restart DSH after installation, then use:
 
@@ -40,17 +59,24 @@ The wallet starts on Solana devnet and currently supports native SOL only. Its B
 
 This wallet plugin is experimental and has not received an independent security audit. Keep an offline recovery backup, test on devnet, and use only small balances until the implementation has been reviewed externally.
 
-The installer never restarts DSH, deletes profiles, signs users out, or touches saved credentials.
+The installer never restarts DSH, deletes profiles, signs users out, or touches saved credentials. `--dry-run` previews installation or removal without changing the DSH profile.
+
+### Import provenance and duplicate behavior
+
+The importer carries visible user and assistant text into DSH. It excludes injected system context, hidden reasoning, raw tool activity, Claude sidechains, and unsupported content because that provider-specific state cannot be resumed safely. Every result reports visible-message and omission counts, plus the source kind, source-session UUID, importer schema version, and a SHA-256 source fingerprint.
+
+Exact duplicate imports are prevented by a private local registry keyed by source and source-session UUID. Concurrent requests for one source share a single operation; registry updates are serialized, atomically replaced, and stored with user-only permissions. The registry never contains transcript text.
 
 ## Development
 
 ```sh
 npm install
 npm test
-./scripts/verify.sh
+npm run pack:check
+node ./bin/dsh-plugins-extra.js doctor
 ```
 
-Node tests cover the locally maintained plugins, including deterministic Solana derivation, encryption, signing, transfer construction, and approval enforcement. The Codex subscription package retains its upstream test and build suite. GitHub Actions runs the workspace checks on Linux and macOS.
+Node tests cover CLI selection and multi-package installation, import provenance and concurrency, deterministic Solana derivation, encryption, signing, transfer construction, and approval enforcement. The Codex subscription package retains its upstream test and build suite. GitHub Actions runs the workspace checks on Linux and macOS.
 
 ## Provenance and licenses
 

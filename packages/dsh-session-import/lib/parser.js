@@ -18,6 +18,27 @@ function textBlocks(content) {
   });
 }
 
+function omissionSummary() {
+  return {
+    injectedContext: 0,
+    reasoning: 0,
+    toolActivity: 0,
+    metaOrSidechain: 0,
+    unsupportedContent: 0,
+  };
+}
+
+function classifyNonTextBlock(block, omissions) {
+  const type = typeof block?.type === "string" ? block.type : "";
+  if (type === "tool_use" || type === "tool_result" || type.includes("tool") || type.includes("function_call")) {
+    omissions.toolActivity += 1;
+  } else if (type === "thinking" || type === "reasoning" || type.includes("thought")) {
+    omissions.reasoning += 1;
+  } else {
+    omissions.unsupportedContent += 1;
+  }
+}
+
 function pushMessage(messages, role, text) {
   const cleaned = text.trim();
   if (!cleaned) return;
@@ -48,6 +69,7 @@ async function readJsonLines(path, visit) {
 
 export async function parseCodexSession(path) {
   const messages = [];
+  const omissions = omissionSummary();
   let cwd;
   let createdAt;
   await readJsonLines(path, (row) => {
@@ -58,18 +80,41 @@ export async function parseCodexSession(path) {
       return;
     }
     const item = row?.type === "response_item" ? row.payload : undefined;
-    if (item?.type !== "message" || !["user", "assistant"].includes(item.role)) return;
+    if (!item) return;
+    if (item.type === "reasoning") {
+      omissions.reasoning += 1;
+      return;
+    }
+    if (item.type !== "message") {
+      if (typeof item.type === "string" && (item.type.includes("tool") || item.type.includes("function_call"))) omissions.toolActivity += 1;
+      return;
+    }
+    if (!["user", "assistant"].includes(item.role)) {
+      omissions.injectedContext += 1;
+      return;
+    }
+    const content = Array.isArray(item.content) ? item.content : [item.content];
+    for (const block of content) {
+      if (block && typeof block === "object" && typeof (block.text ?? block.input_text ?? block.output_text) !== "string") {
+        classifyNonTextBlock(block, omissions);
+      }
+    }
     let blocks = textBlocks(item.content);
     if (item.role === "user") {
-      blocks = blocks.filter((text) => !CODEX_CONTEXT_PREFIXES.some((prefix) => text.trimStart().startsWith(prefix)));
+      blocks = blocks.filter((text) => {
+        const injected = CODEX_CONTEXT_PREFIXES.some((prefix) => text.trimStart().startsWith(prefix));
+        if (injected) omissions.injectedContext += 1;
+        return !injected;
+      });
     }
     pushMessage(messages, item.role, blocks.join("\n\n"));
   });
-  return { messages, cwd, createdAt };
+  return { messages, cwd, createdAt, omissions };
 }
 
 export async function parseClaudeSession(path) {
   const messages = [];
+  const omissions = omissionSummary();
   let cwd;
   let createdAt;
   let title;
@@ -78,10 +123,20 @@ export async function parseClaudeSession(path) {
     const timestamp = Date.parse(row?.timestamp ?? "");
     if (Number.isFinite(timestamp)) createdAt ??= timestamp;
     if (row?.type === "ai-title" && typeof row.title === "string") title = row.title;
-    if (!["user", "assistant"].includes(row?.type) || row.isMeta === true || row.isSidechain === true) return;
+    if (row.isMeta === true || row.isSidechain === true) {
+      omissions.metaOrSidechain += 1;
+      return;
+    }
+    if (!["user", "assistant"].includes(row?.type)) return;
     const role = row.message?.role;
-    if (!["user", "assistant"].includes(role)) return;
+    if (!["user", "assistant"].includes(role)) {
+      omissions.unsupportedContent += 1;
+      return;
+    }
     const content = row.message?.content;
+    if (Array.isArray(content)) {
+      for (const block of content) if (block?.type !== "text") classifyNonTextBlock(block, omissions);
+    }
     const blocks = typeof content === "string"
       ? [content]
       : Array.isArray(content)
@@ -89,7 +144,7 @@ export async function parseClaudeSession(path) {
         : [];
     pushMessage(messages, role, blocks.filter((text) => typeof text === "string").join("\n\n"));
   });
-  return { messages, cwd, createdAt, title };
+  return { messages, cwd, createdAt, title, omissions };
 }
 
 export function fallbackTitle(messages, source, sourceId) {

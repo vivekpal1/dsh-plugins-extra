@@ -1,9 +1,46 @@
 {
-  "name": "dsh-plugins-extra-workspace",
-  "version": "0.2.0",
-  "private": true,
+  "name": "dsh-plugins-extra",
+  "version": "0.3.0",
+  "private": false,
   "type": "module",
-  "description": "Community plugins and themes for DeepSeek Harness",
+  "description": "A safe installer and curated plugin collection for DeepSeek Harness",
+  "bin": {
+    "dsh-plugins-extra": "bin/dsh-plugins-extra.js"
+  },
+  "files": [
+    "bin/",
+    "lib/cli/",
+    "packages/dsh-codex-subscription/package.json",
+    "packages/dsh-codex-subscription/lib/",
+    "packages/dsh-codex-subscription/docs/assets/",
+    "packages/dsh-codex-subscription/dsh-codex.ps1",
+    "packages/dsh-codex-subscription/cordis.patch.yml",
+    "packages/dsh-codex-subscription/AGENTS.md",
+    "packages/dsh-codex-subscription/README.md",
+    "packages/dsh-codex-subscription/README.en.md",
+    "packages/dsh-codex-subscription/SECURITY.md",
+    "packages/dsh-codex-subscription/LICENSE",
+    "packages/dsh-codex-subscription/THIRD_PARTY_NOTICES.md",
+    "packages/dsh-session-import/package.json",
+    "packages/dsh-session-import/lib/",
+    "packages/dsh-session-import/cordis.patch.yml",
+    "packages/dsh-session-import/README.md",
+    "packages/dsh-session-import/LICENSE",
+    "packages/dsh-solana-wallet/package.json",
+    "packages/dsh-solana-wallet/lib/",
+    "packages/dsh-solana-wallet/cordis.patch.yml",
+    "packages/dsh-solana-wallet/README.md",
+    "packages/dsh-solana-wallet/LICENSE",
+    "packages/dsh-solana-wallet/THIRD_PARTY_NOTICES.md",
+    "dsh-themes/package.json",
+    "dsh-themes/lib/",
+    "dsh-themes/cordis.patch.yml",
+    "dsh-themes/README.md",
+    "dsh-themes/LICENSE",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
   "workspaces": [
     "packages/*",
     "dsh-themes"
@@ -11,11 +48,33 @@
   "scripts": {
     "test": "node --test tests/*.test.js && npm run test --workspaces --if-present",
     "check": "npm run test && npm run pack:check",
-    "pack:check": "npm pack --dry-run --workspace dsh-codex-subscription && npm pack --dry-run --workspace dsh-session-import && npm pack --dry-run --workspace dsh-solana-wallet && npm pack --dry-run --workspace dsh-themes",
-    "install:dsh": "./scripts/install.sh all"
+    "pack:check": "npm pack --dry-run && npm pack --dry-run --workspace dsh-codex-subscription && npm pack --dry-run --workspace dsh-session-import && npm pack --dry-run --workspace dsh-solana-wallet && npm pack --dry-run --workspace dsh-themes",
+    "cli": "node ./bin/dsh-plugins-extra.js",
+    "install:dsh": "node ./bin/dsh-plugins-extra.js install all"
   },
   "engines": {
     "node": ">=24"
   },
-  "license": "MIT"
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "codex",
+    "solana-wallet",
+    "session-import",
+    "themes"
+  ],
+  "author": "Vivek Pal",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vivekpal1/dsh-plugins-extra.git"
+  },
+  "homepage": "https://github.com/vivekpal1/dsh-plugins-extra#readme",
+  "bugs": {
+    "url": "https://github.com/vivekpal1/dsh-plugins-extra/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -22,6 +22,7 @@ jobs:
       - name: Pack plugins
         run: |
           mkdir -p .artifacts
+          npm pack . --pack-destination .artifacts
           npm pack ./packages/dsh-codex-subscription --pack-destination .artifacts
           npm pack ./packages/dsh-session-import --pack-destination .artifacts
           npm pack ./packages/dsh-solana-wallet --pack-destination .artifacts

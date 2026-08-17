@@ -12,6 +12,19 @@ window.__ModuleLoader__.load({
       throw new Error(result?.error?.message ?? "Import failed");
     }
 
+    function omissionText(omissions) {
+      if (!omissions) return "Omission details are unavailable for this earlier import record.";
+      const labels = [
+        [omissions.injectedContext, "injected context item"],
+        [omissions.reasoning, "reasoning item"],
+        [omissions.toolActivity, "tool event"],
+        [omissions.metaOrSidechain, "metadata or sidechain record"],
+        [omissions.unsupportedContent, "unsupported content item"],
+      ];
+      const visible = labels.filter(([count]) => count > 0).map(([count, label]) => `${count} ${label}${count === 1 ? "" : "s"}`);
+      return visible.length ? `Excluded ${visible.join(", ")}.` : "No non-conversation records were omitted.";
+    }
+
     function ImportSection({ rpc }) {
       const [source, setSource] = React.useState("codex");
       const [sourceId, setSourceId] = React.useState("");
@@ -44,6 +57,8 @@ window.__ModuleLoader__.load({
           result ? h("div", { className: "sessionImportSuccess", role: "status" },
             h("strong", null, result.duplicate ? "Already imported" : "Imported"),
             h("span", null, result.title),
+            h("span", null, `${result.messageCount} visible messages from ${result.source === "claude" ? "Claude Code" : "Codex"} session ${result.sourceId}.`),
+            h("small", null, omissionText(result.omissions)),
             h("code", null, result.sessionId),
             h("button", { type: "button", onClick: () => window.location.reload() }, "Refresh conversations")) : null));
     }
@@ -97,7 +112,7 @@ window.__ModuleLoader__.load({
     function apply(ctx) {
       const style = document.createElement("style");
       style.dataset.plugin = "dsh-session-import";
-      style.textContent = ".sessionImportPage{max-width:720px}.sessionImportIntro{color:var(--muted-foreground);line-height:1.55}.sessionImportCard{display:grid;gap:16px;padding:20px;border:1px solid var(--border);border-radius:14px;background:var(--card)}.sessionImportCard label{display:grid;gap:7px;font-weight:600}.sessionImportCard select{height:40px;border:1px solid var(--border);border-radius:8px;padding:0 10px;background:var(--background);color:inherit}.sessionImportError{color:#dc2626}.sessionImportSuccess{display:grid;gap:6px;padding:13px;border-radius:10px;background:color-mix(in srgb,#16a34a 12%,transparent)}.sessionImportSuccess code{font-size:12px}.sessionImportSuccess button{width:max-content;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;padding:0}";
+      style.textContent = ".sessionImportPage{max-width:720px}.sessionImportIntro{color:var(--muted-foreground);line-height:1.55}.sessionImportCard{display:grid;gap:16px;padding:20px;border:1px solid var(--border);border-radius:14px;background:var(--card)}.sessionImportCard label{display:grid;gap:7px;font-weight:600}.sessionImportCard select{height:40px;border:1px solid var(--border);border-radius:8px;padding:0 10px;background:var(--background);color:inherit}.sessionImportError{color:var(--dsw-alias-label-error)}.sessionImportSuccess{display:grid;gap:6px;padding:13px;border:1px solid var(--dsw-alias-state-success-primary);border-radius:10px;background:var(--card)}.sessionImportSuccess small{color:var(--muted-foreground);line-height:1.45}.sessionImportSuccess code{font-size:12px;overflow-wrap:anywhere}.sessionImportSuccess button{width:max-content;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;padding:0}";
       document.head.append(style);
       ctx.effect(() => () => style.remove(), "session-import: style");
       installSettingsNavIcon(ctx);

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 - 2026-08-17
+
+- Added the publishable `dsh-plugins-extra` CLI with independent, multi-package, dry-run, list, verify, doctor, and uninstall commands.
+- Bundled the reviewed repository packages into the CLI distribution so similarly named third-party npm packages are never substituted.
+- Added explicit adoption disclosures for credential, context-provenance, self-custody, and reversible-interface extensions.
+- Upgraded session import provenance with omission counts, a versioned atomic registry, source fingerprints, serialized registry updates, and concurrent duplicate prevention.
+
 ## 0.2.0 - 2026-08-17
 
 - Added `dsh-solana-wallet`, an encrypted self-custodial Solana wallet for DSH settings and sessions.
