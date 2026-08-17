@@ -17,12 +17,13 @@ command -v npm >/dev/null 2>&1 || {
 }
 
 case "$target" in
-  all) packages="packages/dsh-codex-subscription packages/dsh-session-import dsh-themes" ;;
+  all) packages="packages/dsh-codex-subscription packages/dsh-session-import packages/dsh-solana-wallet dsh-themes" ;;
   codex) packages="packages/dsh-codex-subscription" ;;
   import) packages="packages/dsh-session-import" ;;
+  wallet) packages="packages/dsh-solana-wallet" ;;
   themes) packages="dsh-themes" ;;
   *)
-    echo "usage: $0 [all|codex|import|themes]" >&2
+    echo "usage: $0 [all|codex|import|wallet|themes]" >&2
     exit 2
     ;;
 esac

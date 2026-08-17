@@ -21,6 +21,12 @@ const clients = [
     marker: "community-themes",
     drawing: "M12 3a9 9 0 1 0 0 18",
   },
+  {
+    name: "Wallets",
+    path: new URL("../packages/dsh-solana-wallet/lib/client.js", import.meta.url),
+    marker: "solana-wallet",
+    drawing: "M4 7.5A2.5 2.5 0 0 1 6.5 5H18",
+  },
 ];
 
 for (const client of clients) {

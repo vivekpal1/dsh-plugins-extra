@@ -1,0 +1,3 @@
+- insert:
+    - id: solana-wallet
+      name: 'dsh-solana-wallet'

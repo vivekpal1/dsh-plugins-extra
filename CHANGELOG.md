@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 - 2026-08-17
+
+- Added `dsh-solana-wallet`, an encrypted self-custodial Solana wallet for DSH settings and sessions.
+- Added wallet creation and BIP39 import at `m/44'/501'/0'/0'`, receive addresses, native SOL balances, recent transaction history, locking, recovery, and native SOL transfers.
+- Added AES-256-GCM encryption with a memory-hard scrypt password key, five-minute in-memory auto-locking, devnet-by-default network safety, and mandatory DSH one-time approval for every session transfer.
+
 ## 0.1.1 - 2026-08-17
 
 - Added distinct Codex sparkle, session import, and theme palette icons to the DSH settings sidebar.

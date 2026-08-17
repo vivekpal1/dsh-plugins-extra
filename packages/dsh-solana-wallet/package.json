@@ -1,0 +1,71 @@
+{
+  "name": "dsh-solana-wallet",
+  "version": "0.1.1",
+  "description": "Encrypted self-custodial Solana wallet tools for DeepSeek Harness",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./vault": "./lib/vault.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/*.js",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-primitives",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "solana",
+    "wallet",
+    "self-custody"
+  ],
+  "author": "Vivek Pal",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vivekpal1/dsh-plugins-extra.git",
+    "directory": "packages/dsh-solana-wallet"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@solana-program/system": "0.13.0",
+    "@solana/kit": "7.1.0",
+    "bip39": "3.1.0",
+    "micro-key-producer": "0.10.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-client-connection": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-credentials": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-settings": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.6",
+    "@deepseek-ai/schemastery": "3.18.1",
+    "react": "^18.2.0"
+  }
+}
