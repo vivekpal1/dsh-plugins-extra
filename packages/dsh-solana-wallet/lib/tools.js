@@ -13,6 +13,7 @@ const addressSchema = {
   type: "object",
   properties: {
     address: required({ type: "string" }),
+    unlocked: required({ type: "boolean" }),
     network: required({ type: "string" }),
     explorerUrl: required({ type: "string" }),
   },
@@ -23,6 +24,7 @@ const balanceSchema = {
   type: "object",
   properties: {
     address: required({ type: "string" }),
+    unlocked: required({ type: "boolean" }),
     network: required({ type: "string" }),
     balanceLamports: required({ type: "string" }),
     balanceSol: required({ type: "string" }),
@@ -80,7 +82,7 @@ export function createWalletTools({ vault, wallet, getNetwork }) {
     parameters: {},
     output: {
       schema: addressSchema,
-      render: (_args, value) => text(`Solana ${value.network} receive address: ${value.address}\nExplorer: ${value.explorerUrl}`),
+      render: (_args, value) => text(`Solana ${value.network} receive address: ${value.address}\nWallet: ${value.unlocked ? "unlocked for signing" : "locked; unlock it in Settings > Wallets before sending"}\nExplorer: ${value.explorerUrl}`),
     },
     isConcurrencySafe: () => true,
     async execute(_args, exec) {
@@ -90,6 +92,7 @@ export function createWalletTools({ vault, wallet, getNetwork }) {
       const network = getNetwork();
       return {
         address: status.address,
+        unlocked: status.unlocked === true,
         network,
         explorerUrl: wallet.explorerAddress(status.address),
       };
@@ -102,7 +105,7 @@ export function createWalletTools({ vault, wallet, getNetwork }) {
     parameters: {},
     output: {
       schema: balanceSchema,
-      render: (_args, value) => text(`${value.balanceSol} SOL on ${value.network}\nAddress: ${value.address}`),
+      render: (_args, value) => text(`${value.balanceSol} SOL on ${value.network}\nAddress: ${value.address}\nWallet: ${value.unlocked ? "unlocked for signing" : "locked; unlock it in Settings > Wallets before sending"}`),
     },
     isConcurrencySafe: () => true,
     async execute(_args, exec) {
@@ -133,8 +136,14 @@ export function createWalletTools({ vault, wallet, getNetwork }) {
 
   const sendTool = defineTool({
     name: WALLET_SEND_TOOL,
-    description: "Send native SOL from the configured wallet. Always ask the user before calling this tool. DSH presents a mandatory one-time approval showing the exact recipient and amount, and the wallet must already be unlocked in Settings.",
+    description: "Send native SOL from the configured wallet. Always ask the user before calling this tool. DSH presents a mandatory one-time approval showing the exact network, recipient, amount, and fee, and the wallet must already be unlocked in Settings.",
     parameters: {
+      network: {
+        type: "string",
+        enum: ["devnet", "mainnet-beta"],
+        required: true,
+        description: "Exact Solana network confirmed by the user. Use mainnet-beta only for real SOL.",
+      },
       recipient: {
         type: "string",
         required: true,
@@ -153,7 +162,10 @@ export function createWalletTools({ vault, wallet, getNetwork }) {
     timeoutMs: 90 * 1000,
     isConcurrencySafe: () => false,
     async execute(args, exec) {
-      return wallet.send(args.recipient, args.amountSol, { signal: exec.signal });
+      return wallet.send(args.recipient, args.amountSol, {
+        expectedNetwork: args.network,
+        signal: exec.signal,
+      });
     },
   });
 
@@ -169,7 +181,10 @@ export function requireTransferApproval(ctx, wallet) {
     const amount = typeof exec.arguments?.amountSol === "string" ? exec.arguments.amountSol : "the requested amount";
     let preview;
     try {
-      preview = await wallet.prepareSend(recipient, amount, { signal: exec.signal });
+      preview = await wallet.prepareSend(recipient, amount, {
+        expectedNetwork: exec.arguments?.network,
+        signal: exec.signal,
+      });
     } catch (error) {
       return { kind: "deny", reason: error instanceof Error ? error.message : "Could not prepare the Solana transfer" };
     }

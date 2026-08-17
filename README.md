@@ -63,6 +63,8 @@ This wallet plugin is experimental and has not received an independent security 
 
 The installer never restarts DSH, deletes profiles, signs users out, or touches saved credentials. `--dry-run` previews installation or removal without changing the DSH profile.
 
+The npm package itself has no runtime dependencies or install scripts. The CLI invokes `npm pack` only against plugin sources bundled in the installed tarball, then invokes `dsh plugin add` without a shell; it never resolves a plugin alias to an arbitrary registry package. These expected filesystem and child-process capabilities may appear in package scanners because they are required to install local DSH bundles.
+
 ### Import provenance and duplicate behavior
 
 The importer carries visible user and assistant text into DSH. It excludes injected system context, hidden reasoning, raw tool activity, Claude sidechains, and unsupported content because that provider-specific state cannot be resumed safely. Every result reports visible-message and omission counts, plus the source kind, source-session UUID, importer schema version, and a SHA-256 source fingerprint.

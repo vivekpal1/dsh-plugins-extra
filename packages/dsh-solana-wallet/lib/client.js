@@ -158,7 +158,11 @@ window.__ModuleLoader__.load({
         });
       };
       const confirmSend = () => void act(async () => {
-        const result = await rpc.call(CHANNEL, "send", pendingSend).then(unwrap);
+        const result = await rpc.call(CHANNEL, "send", {
+          recipient: pendingSend.recipient,
+          amountSol: pendingSend.amountSol,
+          expectedNetwork: pendingSend.preview.network,
+        }).then(unwrap);
         setPendingSend(undefined);
         setSendAcknowledged(false);
         setSend({ recipient: "", amountSol: "" });

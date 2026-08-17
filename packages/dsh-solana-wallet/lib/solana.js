@@ -19,7 +19,7 @@ import { getTransferSolInstruction } from "@solana-program/system";
 export const LAMPORTS_PER_SOL = 1_000_000_000n;
 export const NETWORKS = Object.freeze({
   devnet: Object.freeze({ id: "devnet", label: "Devnet", rpcUrl: "https://api.devnet.solana.com" }),
-  "mainnet-beta": Object.freeze({ id: "mainnet-beta", label: "Mainnet Beta", rpcUrl: "https://api.mainnet-beta.solana.com" }),
+  "mainnet-beta": Object.freeze({ id: "mainnet-beta", label: "Mainnet Beta", rpcUrl: "https://api.mainnet.solana.com" }),
 });
 const AMOUNT = /^(?:0|[1-9]\d*)(?:\.(\d{1,9}))?$/u;
 
@@ -72,15 +72,20 @@ function delay(ms, signal) {
 }
 
 export class SolanaWalletService {
+  #sending = false;
+
   constructor(vault, options) {
     this.vault = vault;
     this.getNetwork = options.getNetwork;
     this.createRpc = options.createRpc ?? createSolanaRpc;
   }
 
-  #client() {
+  #client(expectedNetwork) {
     const network = this.getNetwork();
     const definition = networkDefinition(network);
+    if (expectedNetwork !== undefined && expectedNetwork !== network) {
+      throw new Error("Wallet network changed; review the transfer again");
+    }
     return { network, rpc: this.createRpc(definition.rpcUrl) };
   }
 
@@ -98,6 +103,7 @@ export class SolanaWalletService {
     const balanceLamports = BigInt(response.value);
     return {
       address: status.address,
+      unlocked: status.unlocked === true,
       network,
       balanceLamports: balanceLamports.toString(),
       balanceSol: formatSol(balanceLamports),
@@ -174,7 +180,7 @@ export class SolanaWalletService {
     }
     if (String(destination) === String(signer.address)) throw new Error("Recipient must be different from this wallet");
     const amountLamports = parseSolAmount(amount);
-    const { network, rpc } = this.#client();
+    const { network, rpc } = this.#client(options.expectedNetwork);
     const current = await rpc.getBalance(signer.address, { commitment: "confirmed" }).send({ abortSignal: options.signal });
     const latest = await rpc.getLatestBlockhash({ commitment: "confirmed" }).send({ abortSignal: options.signal });
     const instruction = getTransferSolInstruction({
@@ -219,30 +225,36 @@ export class SolanaWalletService {
   }
 
   async send(recipient, amount, options = {}) {
-    const prepared = await this.#prepareTransfer(recipient, amount, options);
-    const { signer, destination, amountLamports, feeLamports, network, rpc, latest, message } = prepared;
-    const signed = await signTransactionMessageWithSigners(message);
-    const expectedSignature = getSignatureFromTransaction(signed);
-    const wire = getBase64EncodedWireTransaction(signed);
-    const signature = await rpc.sendTransaction(wire, {
-      encoding: "base64",
-      maxRetries: 3n,
-      preflightCommitment: "confirmed",
-      skipPreflight: false,
-    }).send({ abortSignal: options.signal });
-    if (String(signature) !== String(expectedSignature)) throw new Error("Solana RPC returned an unexpected transaction signature");
-    const confirmationStatus = await this.#confirm(rpc, signature, latest.value.lastValidBlockHeight, options.signal);
-    return {
-      signature: String(signature),
-      network,
-      from: String(signer.address),
-      recipient: String(destination),
-      amountLamports: amountLamports.toString(),
-      amountSol: formatSol(amountLamports),
-      feeLamports: feeLamports.toString(),
-      feeSol: formatSol(feeLamports),
-      confirmationStatus,
-      explorerUrl: explorerUrl(network, "tx", String(signature)),
-    };
+    if (this.#sending) throw new Error("A Solana transfer is already in progress");
+    this.#sending = true;
+    try {
+      const prepared = await this.#prepareTransfer(recipient, amount, options);
+      const { signer, destination, amountLamports, feeLamports, network, rpc, latest, message } = prepared;
+      const signed = await signTransactionMessageWithSigners(message);
+      const expectedSignature = getSignatureFromTransaction(signed);
+      const wire = getBase64EncodedWireTransaction(signed);
+      const signature = await rpc.sendTransaction(wire, {
+        encoding: "base64",
+        maxRetries: 3n,
+        preflightCommitment: "confirmed",
+        skipPreflight: false,
+      }).send({ abortSignal: options.signal });
+      if (String(signature) !== String(expectedSignature)) throw new Error("Solana RPC returned an unexpected transaction signature");
+      const confirmationStatus = await this.#confirm(rpc, signature, latest.value.lastValidBlockHeight, options.signal);
+      return {
+        signature: String(signature),
+        network,
+        from: String(signer.address),
+        recipient: String(destination),
+        amountLamports: amountLamports.toString(),
+        amountSol: formatSol(amountLamports),
+        feeLamports: feeLamports.toString(),
+        feeSol: formatSol(feeLamports),
+        confirmationStatus,
+        explorerUrl: explorerUrl(network, "tx", String(signature)),
+      };
+    } finally {
+      this.#sending = false;
+    }
   }
 }

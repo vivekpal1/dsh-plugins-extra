@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { getBase58Decoder } from "@solana/kit";
-import { formatSol, parseSolAmount, SolanaWalletService } from "../lib/solana.js";
+import { formatSol, NETWORKS, parseSolAmount, SolanaWalletService } from "../lib/solana.js";
 import { signerFromMnemonic } from "../lib/vault.js";
 
 const KNOWN_MNEMONIC = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
@@ -13,6 +13,10 @@ test("parses SOL without floating point rounding", () => {
   assert.equal(formatSol(1_250_000_000n), "1.25");
   assert.throws(() => parseSolAmount("1.0000000001"), /9 decimal/u);
   assert.throws(() => parseSolAmount("1e-3"), /positive SOL/u);
+});
+
+test("uses Solana's current official public mainnet endpoint", () => {
+  assert.equal(NETWORKS["mainnet-beta"].rpcUrl, "https://api.mainnet.solana.com");
 });
 
 test("builds, signs, broadcasts, and confirms one native SOL transfer", async () => {
@@ -38,6 +42,34 @@ test("builds, signs, broadcasts, and confirms one native SOL transfer", async ()
   assert.equal(result.recipient, RECIPIENT);
   assert.equal(result.confirmationStatus, "confirmed");
   assert.match(result.explorerUrl, /cluster=devnet/u);
+});
+
+test("binds an approved transfer to its reviewed network", async () => {
+  const signer = await signerFromMnemonic(KNOWN_MNEMONIC);
+  const service = new SolanaWalletService({ signer: () => signer }, {
+    getNetwork: () => "mainnet-beta",
+    createRpc: () => { throw new Error("RPC must not be reached after a network mismatch"); },
+  });
+  await assert.rejects(
+    () => service.send(RECIPIENT, "0.1", { expectedNetwork: "devnet" }),
+    /network changed/u,
+  );
+});
+
+test("rejects a concurrent send while one transfer is in progress", async () => {
+  const signer = await signerFromMnemonic(KNOWN_MNEMONIC);
+  let releaseBalance;
+  const waitingBalance = new Promise((resolve) => { releaseBalance = resolve; });
+  const rpc = {
+    getBalance: () => ({ send: async () => waitingBalance }),
+    getLatestBlockhash: () => ({ send: async () => ({ value: { blockhash: "11111111111111111111111111111111", lastValidBlockHeight: 100n } }) }),
+    getFeeForMessage: () => ({ send: async () => ({ value: 5_000n }) }),
+  };
+  const service = new SolanaWalletService({ signer: () => signer }, { getNetwork: () => "devnet", createRpc: () => rpc });
+  const first = service.send(RECIPIENT, "0.1");
+  await assert.rejects(() => service.send(RECIPIENT, "0.1"), /already in progress/u);
+  releaseBalance({ value: 0n });
+  await assert.rejects(() => first, /balance|fee/u);
 });
 
 test("prepares an unsigned fee and simulation preview before approval", async () => {
@@ -70,9 +102,11 @@ test("returns public balance and transaction history without requiring unlock", 
       meta: { preBalances: [2_000_000_000n], postBalances: [1_499_995_000n] },
     }) }),
   };
-  const vault = { status: async () => ({ configured: true, address: walletAddress }) };
+  const vault = { status: async () => ({ configured: true, unlocked: false, address: walletAddress }) };
   const service = new SolanaWalletService(vault, { getNetwork: () => "devnet", createRpc: () => rpc });
-  assert.equal((await service.balance()).balanceSol, "1.5");
+  const balance = await service.balance();
+  assert.equal(balance.balanceSol, "1.5");
+  assert.equal(balance.unlocked, false);
   const history = await service.transactions({ limit: 1 });
   assert.equal(history.transactions[0].direction, "sent");
   assert.equal(history.transactions[0].changeSol, "0.500005");

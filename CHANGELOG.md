@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 - 2026-08-17
+
+- Enabled the current official Solana mainnet RPC endpoint while keeping devnet as the default and persisting an explicit mainnet acknowledgement.
+- Bound every reviewed transfer to its exact network, rejected concurrent sends, and made locked-wallet guidance visible to session agents without exposing passwords or seed phrases.
+- Pinned GitHub Actions to immutable commits, disabled dependency lifecycle scripts in CI, removed persisted checkout credentials, and prepared trusted npm publishing with provenance.
+- Documented the installer capabilities that package scanners correctly detect and verified that the root npm package has no runtime dependencies or install scripts.
+
 ## 0.3.1 - 2026-08-17
 
 - Replaced repeated raw pnpm output with a compact install plan, one verified status per extension, and a clear completion summary.

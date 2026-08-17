@@ -69,7 +69,7 @@ test("install keeps known package-manager warnings quiet and skips current versi
     run(name, args) {
       calls.push([name, ...args]);
       if (name === "dsh" && args[0] === "plugin" && args[3] === "list") {
-        return { stdout: "dsh-codex-subscription 0.3.1\ndsh-solana-wallet 0.1.1\ndsh-themes 0.1.1\n", stderr: "" };
+        return { stdout: "dsh-codex-subscription 0.3.1\ndsh-solana-wallet 0.2.0\ndsh-themes 0.1.1\n", stderr: "" };
       }
       throw new Error("Package manager should not run for current versions");
     },
