@@ -1,0 +1,20 @@
+{
+  "name": "dsh-plugins-extra-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Community plugins and themes for DeepSeek Harness",
+  "workspaces": [
+    "packages/*",
+    "dsh-themes"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "check": "npm run test && npm run pack:check",
+    "pack:check": "npm pack --dry-run --workspace dsh-codex-subscription && npm pack --dry-run --workspace dsh-session-import && npm pack --dry-run --workspace dsh-themes",
+    "install:dsh": "./scripts/install.sh all"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "license": "MIT"
+}
