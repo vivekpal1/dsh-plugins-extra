@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 - 2026-08-17
+
+- Replaced repeated raw pnpm output with a compact install plan, one verified status per extension, and a clear completion summary.
+- Added installed-version detection so current extensions are skipped instead of being reinstalled.
+- Preserved package-manager diagnostics behind `--verbose` and prevented accidental downgrades when a newer extension is already present.
+
 ## 0.3.0 - 2026-08-17
 
 - Added the publishable `dsh-plugins-extra` CLI with independent, multi-package, dry-run, list, verify, doctor, and uninstall commands.

@@ -38,6 +38,8 @@ dsh-plugins-extra doctor
 dsh-plugins-extra uninstall wallet
 ```
 
+Normal installs show a compact plan and one verified result per extension. Already-current versions are skipped, newer versions are never downgraded, and known DSH host-peer warnings stay out of the success path. Add `--verbose` when troubleshooting to stream the underlying package-manager output.
+
 One-off use through npm works as well:
 
 ```sh
