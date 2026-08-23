@@ -27,6 +27,12 @@ const clients = [
     marker: "solana-wallet",
     drawing: "M4 7.5A2.5 2.5 0 0 1 6.5 5H18",
   },
+  {
+    name: "Telegram",
+    path: new URL("../packages/dsh-telegram/lib/client.js", import.meta.url),
+    marker: "dsh-telegram",
+    drawing: "m21 3-7.4 18-4.2-7.1L3 10.7 21 3Z",
+  },
 ];
 
 for (const client of clients) {

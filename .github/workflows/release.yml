@@ -31,6 +31,8 @@ jobs:
           npm pack ./packages/dsh-codex-subscription --pack-destination .artifacts
           npm pack ./packages/dsh-session-import --pack-destination .artifacts
           npm pack ./packages/dsh-solana-wallet --pack-destination .artifacts
+          npm pack ./packages/dsh-terminal --pack-destination .artifacts
+          npm pack ./packages/dsh-telegram --pack-destination .artifacts
           npm pack ./dsh-themes --pack-destination .artifacts
       - name: Publish npm package with provenance
         run: npm publish --access public

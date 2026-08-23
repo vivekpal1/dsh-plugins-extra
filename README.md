@@ -10,6 +10,8 @@
 | `import` | Context provenance | Import visible Codex and Claude Code conversations into DSH | Maintained here |
 | `wallet` | Self-custody and transactions | Encrypted self-custodial Solana wallet and approved session tools | Experimental, unaudited |
 | `themes` | Reversible interface | Catppuccin, Gruvbox, Nord, Tokyo Night, and Dracula palettes | Maintained here |
+| `terminal` | Local command execution | Interactive shell tab next to Trajectory, opened in the session's project directory | Maintained here |
+| `telegram` | Authenticated remote control | Pair a private Telegram bot chat to create, select, prompt, inspect, and cancel DSH sessions | Maintained here |
 
 These packages are deliberately not presented as one trust decision. The CLI prints the relevant disclosure before installing each package, and users can list, verify, install, or remove any combination.
 
@@ -30,7 +32,7 @@ dsh-plugins-extra install import themes
 Multiple package names can follow one install command, and `all` installs the complete collection:
 
 ```sh
-dsh-plugins-extra install codex wallet themes
+dsh-plugins-extra install codex wallet themes telegram
 dsh-plugins-extra install all --profile web
 dsh-plugins-extra update import themes
 dsh-plugins-extra verify
@@ -54,6 +56,18 @@ Restart DSH after installation, then use:
 - **Settings → Import** to import a Codex or Claude Code session UUID.
 - **Settings → Wallets** to create or import an encrypted Solana wallet.
 - **Settings → Themes** to choose a community palette.
+- The **Terminal** tab next to **Trajectory** in any conversation to open a shell in the session's project directory.
+- **Settings → Telegram** to verify a BotFather token, enable long polling, generate a one-time pairing code, and configure session access.
+
+### Telegram remote-control safety
+
+Telegram access is outbound-only and deny-by-default. The bot ignores groups, channels, bot-authored messages, edited messages, stale updates, subagent sessions, DSH slash commands, tool approvals, attachments, and raw tool events. Authorization binds a five-minute, single-use local pairing challenge to the exact Telegram user ID and private chat ID. By default, each paired identity can access only sessions it created through Telegram; access to existing root sessions is a separate high-trust setting.
+
+A Telegram prompt still runs with the capabilities of the selected DSH agent preset. Pair only accounts you fully trust, keep Telegram two-factor authentication enabled, and use a least-privilege preset for remote-created sessions. See [`packages/dsh-telegram/SECURITY.md`](packages/dsh-telegram/SECURITY.md) for the full threat model.
+
+### Terminal safety
+
+The terminal runs commands as the local user in the session's working directory — the same trust boundary as DSH's own bash tooling. It is a real pseudoterminal (`node-pty`, with a fallback to DSH's subprocess PTY seam), so interactive programs, job control, and resize work normally. The RPC channel is loopback-only, commands are not sandboxed, and one shell per session auto-closes after 15 minutes of inactivity. xterm.js and its fit addon are served from the plugin's own host route, never from a third-party CDN.
 
 ### Solana wallet safety
 
@@ -80,10 +94,10 @@ npm run pack:check
 node ./bin/dsh-plugins-extra.js doctor
 ```
 
-Node tests cover CLI selection and multi-package installation, import provenance and concurrency, deterministic Solana derivation, encryption, signing, transfer construction, and approval enforcement. The Codex subscription package retains its upstream test and build suite. GitHub Actions runs the workspace checks on Linux and macOS.
+Node tests cover CLI selection and multi-package installation, import provenance and concurrency, deterministic Solana derivation, encryption, signing, transfer construction, Telegram credential isolation, command parsing, rate limits, Unicode-safe output chunking, and approval enforcement. The Codex subscription package retains its upstream test and build suite. GitHub Actions runs the workspace checks on Linux and macOS.
 
 ## Provenance and licenses
 
 `dsh-codex-subscription` is copied from upstream tag `v0.3.1` at commit `34b0fdd0783d1150351385eb727e402bcbdaf847`. Its MIT license, author metadata, security policy, and third-party notices remain inside that package. This workspace adds the settings-icon compatibility shim to the client bundle; functional provider changes should still be synchronized from upstream and clearly documented.
 
-The session importer, Solana wallet integration, theme integration, repository tooling, and documentation are MIT licensed. Theme names and palettes belong to their respective open-source communities; this repository is not affiliated with those projects, DeepSeek, Anthropic, OpenAI, or Solana Foundation.
+The session importer, Solana wallet integration, terminal, Telegram integration, theme integration, repository tooling, and documentation are MIT licensed. Theme names and palettes belong to their respective open-source communities; this repository is not affiliated with those projects, DeepSeek, Anthropic, OpenAI, Telegram, or Solana Foundation.

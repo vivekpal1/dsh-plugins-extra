@@ -1,0 +1,3 @@
+- insert:
+    - id: telegram-remote
+      name: 'dsh-telegram'

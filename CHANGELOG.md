@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 - 2026-08-22
+
+- Added `dsh-telegram`, an outbound-only Telegram Bot API bridge for creating, selecting, prompting, inspecting, renaming, and cancelling DSH sessions from a paired private chat.
+- Added DSH credential-backed token storage, local one-time pairing, exact user/chat authorization, scoped session ACLs, durable at-most-once update admission, stale-update rejection, bounded output, and layered rate limits.
+- Added a polished Telegram settings page for bot verification, polling health, pairing, revocation, project/preset policy, and explicit high-trust existing-session access.
+- Added `dsh-terminal`, an xterm.js conversation tab backed by a persistent per-session PTY in the session project directory.
+- Added tests, package verification, installer catalog entries, security documentation, and root-package distribution files for both extensions.
+
 ## 0.4.0 - 2026-08-17
 
 - Enabled the current official Solana mainnet RPC endpoint while keeping devnet as the default and persisting an explicit mainnet acknowledgement.
