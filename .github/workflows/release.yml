@@ -33,6 +33,7 @@ jobs:
           npm pack ./packages/dsh-solana-wallet --pack-destination .artifacts
           npm pack ./packages/dsh-terminal --pack-destination .artifacts
           npm pack ./packages/dsh-telegram --pack-destination .artifacts
+          npm pack ./packages/dsh-excalidraw --pack-destination .artifacts
           npm pack ./dsh-themes --pack-destination .artifacts
       - name: Publish GitHub release
         env:

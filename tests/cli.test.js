@@ -8,7 +8,8 @@ import { main, parseArguments } from "../lib/cli/main.js";
 
 test("CLI resolves aliases, comma lists, all, and duplicate selections", () => {
   assert.deepEqual(resolvePackages(["session-import", "theme,themes"]).map((entry) => entry.key), ["import", "themes"]);
-  assert.deepEqual(resolvePackages(["all"]).map((entry) => entry.key), ["codex", "import", "wallet", "themes", "terminal", "telegram"]);
+  assert.deepEqual(resolvePackages(["all"]).map((entry) => entry.key), ["codex", "import", "wallet", "themes", "terminal", "telegram", "excalidraw"]);
+  assert.deepEqual(resolvePackages(["draw", "dsh-excalidraw"]).map((entry) => entry.key), ["excalidraw"]);
   assert.deepEqual(resolvePackages(["tg", "dsh-telegram"]).map((entry) => entry.key), ["telegram"]);
   assert.throws(() => resolvePackages(["unknown"]), /Unknown package/u);
   assert.match(resolvePackages(["import"])[0].version, /^\d+\.\d+\.\d+$/u);

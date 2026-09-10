@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.7.0 - 2026-09-10
+
+- Added `dsh-excalidraw`, a conversation-tab canvas with three compact agent tools (`excalidraw_apply`, `excalidraw_scene`, `excalidraw_export`) instead of a 26-tool MCP catalog or screenshot round-trips.
+- Scenes persist as `.excalidraw` files in the session workspace, stay loopback-RPC-only, and can be dropped onto the tab or opened in Excalidraw.
+
+## 0.6.4 - 2026-08-24
+
+- Stop dumping compressed PDF binary into the DSH transcript. Scanned or Flate-encoded PDFs are saved to disk and the model is told to read the original file.
+
+## 0.6.3 - 2026-08-24
+
+- Telegram polling steals a lock left by a dead DSH process and retries if a restart loses the lease, so messages keep flowing after DSH is relaunched.
+
+## 0.6.2 - 2026-08-24
+
+- Telegram shows a typing indicator while downloading a file, asks for a resend if a document arrives stale, and tells the model when a PDF has no extractable text (scanned e-visas).
+
+## 0.6.1 - 2026-08-23
+
+- Telegram no longer sends an "Accepted in …" receipt after each prompt; only the assistant reply (and generated files) come back.
+- Added `/model` to list and change the selected session model from a paired chat.
+
+## 0.6.0 - 2026-08-23
+
+- Telegram accepts photos, PDFs, Office documents, and other files from a paired private chat, saves originals into `.dsh/telegram-inbox/`, and forwards images plus extracted text to DSH.
+- Telegram sends generated PDFs, spreadsheets, documents, and images back when the agent writes them to `.dsh/telegram-outbox/` during a Telegram-originated turn.
+- File downloads are capped at 20 MB, filenames are sanitized, and bot-token values stay out of API error messages.
+
 ## 0.5.0 - 2026-08-22
 
 - Added `dsh-telegram`, an outbound-only Telegram Bot API bridge for creating, selecting, prompting, inspecting, renaming, and cancelling DSH sessions from a paired private chat.

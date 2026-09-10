@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugins-extra",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "private": false,
   "type": "module",
   "description": "A safe installer and curated plugin collection for DeepSeek Harness",
@@ -44,6 +44,12 @@
     "packages/dsh-telegram/README.md",
     "packages/dsh-telegram/SECURITY.md",
     "packages/dsh-telegram/LICENSE",
+    "packages/dsh-excalidraw/package.json",
+    "packages/dsh-excalidraw/lib/",
+    "packages/dsh-excalidraw/cordis.patch.yml",
+    "packages/dsh-excalidraw/README.md",
+    "packages/dsh-excalidraw/LICENSE",
+    "packages/dsh-excalidraw/THIRD_PARTY_NOTICES.md",
     "dsh-themes/package.json",
     "dsh-themes/lib/",
     "dsh-themes/cordis.patch.yml",
@@ -60,7 +66,7 @@
   "scripts": {
     "test": "node --test tests/*.test.js && npm run test --workspaces --if-present",
     "check": "npm run test && npm run pack:check",
-    "pack:check": "npm pack --dry-run && npm pack --dry-run --workspace dsh-codex-subscription && npm pack --dry-run --workspace dsh-session-import && npm pack --dry-run --workspace dsh-solana-wallet && npm pack --dry-run --workspace dsh-terminal && npm pack --dry-run --workspace dsh-telegram && npm pack --dry-run --workspace dsh-themes",
+    "pack:check": "npm pack --dry-run && npm pack --dry-run --workspace dsh-codex-subscription && npm pack --dry-run --workspace dsh-session-import && npm pack --dry-run --workspace dsh-solana-wallet && npm pack --dry-run --workspace dsh-terminal && npm pack --dry-run --workspace dsh-telegram && npm pack --dry-run --workspace dsh-excalidraw && npm pack --dry-run --workspace dsh-themes",
     "cli": "node ./bin/dsh-plugins-extra.js",
     "install:dsh": "node ./bin/dsh-plugins-extra.js install all"
   },
@@ -76,6 +82,7 @@
     "session-import",
     "terminal",
     "telegram",
+    "excalidraw",
     "remote-control",
     "themes"
   ],
